@@ -1,24 +1,29 @@
 type Switchable = undefined | number | string | boolean;
 
-function sw<T extends Switchable, R extends Switchable>(...args: T[]) {
-  return new Sw<T, R>(...args);
+/**
+ * This is a
+ *
+ * @param args The input to switch over.
+ * @returns A switch interface.
+ */
+function sw<T extends Switchable, R extends Switchable>(args: T[]) {
+  return new Sw<T, R>(args);
 }
 
-class Sw<T extends Switchable, R extends Switchable | void> {
+class Sw<T extends Switchable, R extends Switchable | void> extends Function {
   #correct = false;
   #done = false;
   #args: Switchable[];
   #stack: ((arg?: R) => Promise<R | void> | R | void)[] = [];
 
-  constructor(...args: T[]) {
-    this.#args = args;
+  constructor(value: Switchable[]) {
+    super("return arguments.callee.execute()");
+    this.#args = value;
   }
 
-  case(...expectation: T[]): this {
+  case(expectation: T[]): this {
     if (this.#args.reduce((p, v, i) => p && expectation[i] == v, true))
       this.#correct = true;
-
-    console.log(this.#args, expectation);
 
     return this;
   }
@@ -30,7 +35,7 @@ class Sw<T extends Switchable, R extends Switchable | void> {
     return this;
   }
 
-  statement(fn: (arg?: R) => Promise<R | void> | R | void): this {
+  do(fn: (arg?: R) => Promise<R | void> | R | void): this {
     if (this.#done) return this;
     if (this.#correct) this.#stack.push(fn);
 
@@ -44,7 +49,7 @@ class Sw<T extends Switchable, R extends Switchable | void> {
     return this;
   }
 
-  async close(): Promise<R | void> {
+  async execute(): Promise<R | void> {
     let funnelled;
     for (const fn of this.#stack) funnelled = await fn(funnelled ?? undefined);
 
