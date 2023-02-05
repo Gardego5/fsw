@@ -1,8 +1,6 @@
 type Switchable = undefined | number | string | boolean;
 
 /**
- * This is a
- *
  * @param args The input to switch over.
  * @returns A switch interface.
  */
